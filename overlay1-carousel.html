@@ -26,7 +26,7 @@
         width: 360px;
         background: #010131;
         border-radius: 12px;
-        border: 1px solid #59bfff;
+        border: 2px solid #59bfff;
         overflow: hidden;
         box-shadow:
           0 4px 32px rgba(89, 191, 255, 0.08),
@@ -107,9 +107,18 @@
         background: rgba(89, 191, 255, 0.15);
         flex-shrink: 0;
       }
+      .rank-presentation {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+      }
       .rank-wr-block {
         display: flex;
         flex-direction: column;
+        justify-content: center;
+        align-items: center;
         gap: 2px;
       }
       .wr-val {
@@ -167,20 +176,27 @@
       .slide-name-content {
         display: flex;
         flex-direction: column;
+        justify-content: center;
+        align-items: center;
         gap: 4px;
       }
-      .eyebrow {
-        font-size: 8.5px;
-        color: rgba(89, 191, 255, 0.5);
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        font-weight: 600;
+      .player-name-wrap {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
       }
       .player-name {
         font-size: 30px;
         font-weight: 800;
         color: #fff;
         letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .player-tag {
+        font-size: 30px;
+        color: #59bfff;
+        font-weight: 800;
         line-height: 1;
       }
       .player-meta {
@@ -578,7 +594,8 @@
           tier.charAt(0) + tier.slice(1).toLowerCase() + " " + soloq.rank;
         const wr = Math.round((soloq.wins / (soloq.wins + soloq.losses)) * 100);
         sec.innerHTML = `
-    <div class="rank-emblem"><img src="${RANK_EMBLEMS[tier] || ""}" alt="${tier}" onerror="this.style.display='none'"></div>
+        <div class="rank-presentation">
+        <div class="rank-emblem"><img src="${RANK_EMBLEMS[tier] || ""}" alt="${tier}" onerror="this.style.display='none'"></div>
     <div class="rank-info">
       <span class="rank-label-small">Rang actuel</span>
       <span class="rank-value">${rankStr}</span>
@@ -591,16 +608,18 @@
       <span class="wr-val">${wr}%</span>
     </div>
     <div class="right-badges">
-      ${soloq.hotStreak ? '<span class="badge badge-streak">🔥 Hot Streak</span>' : ""}
+      ${soloq.hotStreak ? '<span class="badge badge-streak">🔥 Win Streak</span>' : ""}
       <span class="badge badge-wl">${soloq.wins}V ${soloq.losses}D</span>
-    </div>`;
+    </div></div>`;
       }
 
       function slidePlayerName(d) {
         return `<div class="slide"><div class="slide-name-content">
-    <span class="eyebrow">Streamer ADC</span>
-    <span class="player-name">${d.player.name}</span>
-    <span class="player-meta">#${d.player.tag} · ADC Main · EUW</span>
+    <div class="player-name-wrap">
+      <span class="player-name">${d.player.name}</span>
+      <span class="player-tag">#${d.player.tag}</span>
+    </div>
+    <span class="player-meta">#${d.player.tag} ADC Main · EUW</span>
   </div></div>`;
       }
 
@@ -644,7 +663,7 @@
     <div class="season-block">
       <span class="s-val wr">${s.wr !== null ? s.wr + "%" : "—"}</span>
       <span class="s-sub">Winrate</span>
-      <span style="font-size:8px;color:rgba(89,191,255,0.3);margin-top:1px">${s.total ? s.total + " parties" : ""}</span>
+      <span style="font-size:10px;color:rgba(89,191,255,0.5);margin-top:1px">${s.total ? s.total + " parties" : ""}</span>
     </div>
     <div class="v-sep"></div>
     <div class="season-block"><span class="s-val kda">${s.avgKda}</span><span class="s-sub">KDA moyen</span></div>
