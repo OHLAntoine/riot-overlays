@@ -1,203 +1,592 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>AphinXSa — Overlay Carrousel</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { background: transparent; width: 360px; height: 210px; overflow: hidden; font-family: 'Inter', sans-serif; }
-  .overlay { width: 360px; background: #010131; border-radius: 12px; border: 1px solid rgba(89,191,255,0.22); overflow: hidden; box-shadow: 0 4px 32px rgba(89,191,255,0.08), 0 0 0 0.5px rgba(89,191,255,0.1); }
-  .rank-section { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid rgba(89,191,255,0.15); background: linear-gradient(90deg,rgba(89,191,255,0.05),transparent); min-height: 58px; position: relative; z-index: 2; }
-  .rank-emblem { width: 40px; height: 40px; border-radius: 50%; background: rgba(89,191,255,0.08); border: 1.5px solid rgba(89,191,255,0.3); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
-  .rank-emblem img { width: 36px; height: 36px; object-fit: contain; }
-  .rank-info { display: flex; flex-direction: column; gap: 1px; }
-  .rank-label-small { font-size: 8.5px; color: rgba(89,191,255,0.5); text-transform: uppercase; letter-spacing: .12em; font-weight: 600; }
-  .rank-value { font-size: 15px; font-weight: 800; color: #59BFFF; line-height: 1; letter-spacing: -.01em; }
-  .rank-lp { font-size: 11px; color: rgba(89,191,255,0.7); font-weight: 500; }
-  .lp-bar-wrap { height: 2px; background: rgba(89,191,255,0.12); border-radius: 1px; overflow: hidden; width: 60px; margin-top: 2px; }
-  .lp-bar-fill { height: 100%; border-radius: 1px; background: linear-gradient(90deg,#59BFFF,#A8E063); }
-  .v-sep { width: 1px; height: 30px; background: rgba(89,191,255,0.15); flex-shrink: 0; }
-  .rank-wr-block { display: flex; flex-direction: column; gap: 2px; }
-  .wr-val { font-size: 14px; font-weight: 700; color: #A8E063; }
-  .meta-label { font-size: 8.5px; color: rgba(89,191,255,0.5); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
-  .right-badges { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-  .badge { font-size: 9px; padding: 2px 7px; border-radius: 4px; font-weight: 600; letter-spacing: .04em; }
-  .badge-streak { background: rgba(89,191,255,0.1); border: 1px solid rgba(89,191,255,0.3); color: rgba(89,191,255,0.85); }
-  .badge-wl { background: rgba(168,224,99,0.08); border: 1px solid rgba(168,224,99,0.25); color: rgba(168,224,99,0.8); }
-  .carousel-wrap { height: 112px; overflow: hidden; }
-  .carousel-track { display: flex; flex-direction: column; transition: transform .6s cubic-bezier(.4,0,.2,1); }
-  .slide { height: 112px; flex-shrink: 0; display: flex; align-items: center; padding: 0 16px; }
-  .slide-name-content { display: flex; flex-direction: column; gap: 4px; }
-  .eyebrow { font-size: 8.5px; color: rgba(89,191,255,0.5); text-transform: uppercase; letter-spacing: .14em; font-weight: 600; }
-  .player-name { font-size: 30px; font-weight: 800; color: #fff; letter-spacing: -.02em; line-height: 1; }
-  .player-meta { font-size: 11px; color: rgba(89,191,255,0.6); font-weight: 500; }
-  .stats-grid { display: grid; grid-template-columns: 1fr 1px 1fr 1px 1fr; align-items: center; width: 100%; }
-  .stat-block { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-  .stat-num { font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
-  .stat-num.win { color: #A8E063; } .stat-num.loss { color: #FF6B6B; } .stat-num.kda { color: #59BFFF; font-size: 22px; }
-  .stat-sub { font-size: 8.5px; color: rgba(89,191,255,0.45); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
-  .champs-row { display: flex; gap: 8px; align-items: center; width: 100%; justify-content: center; }
-  .champ-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
-  .champ-icon-wrap { position: relative; width: 44px; height: 44px; }
-  .champ-img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid transparent; display: block; }
-  .champ-img.win { border-color: rgba(168,224,99,0.6); box-shadow: 0 0 8px rgba(168,224,99,0.2); }
-  .champ-img.loss { border-color: rgba(255,107,107,0.6); filter: brightness(0.85); }
-  .result-dot { position: absolute; bottom: -1px; right: -1px; width: 13px; height: 13px; border-radius: 50%; font-size: 7px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 1.5px solid #010131; }
-  .result-dot.win { background: #A8E063; color: #010131; } .result-dot.loss { background: #FF6B6B; color: #fff; }
-  .champ-name-label { font-size: 8px; color: rgba(89,191,255,0.7); font-weight: 600; text-align: center; max-width: 52px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .champ-kda-label { font-size: 8px; font-weight: 600; text-align: center; }
-  .champ-kda-label.win { color: rgba(168,224,99,0.75); } .champ-kda-label.loss { color: rgba(255,107,107,0.75); }
-  .season-grid { display: grid; grid-template-columns: 1fr 1px 1fr 1px 1fr; align-items: center; width: 100%; }
-  .season-block { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .s-val { font-size: 20px; font-weight: 800; letter-spacing: -.01em; line-height: 1; }
-  .s-val.wr { color: #A8E063; } .s-val.kda { color: #59BFFF; }
-  .s-sub { font-size: 8.5px; color: rgba(89,191,255,0.45); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
-  .mp-champ-img { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid rgba(89,191,255,0.4); object-fit: cover; }
-  .mp-name { font-size: 9px; color: #fff; font-weight: 600; }
-  .mp-wr { font-size: 8.5px; color: rgba(168,224,99,0.8); font-weight: 600; }
-  .slide-indicators { display: flex; gap: 5px; justify-content: center; padding: 5px 0 6px; border-top: 1px solid rgba(89,191,255,0.08); }
-  .dot-ind { height: 4px; border-radius: 2px; background: rgba(89,191,255,0.2); transition: all .35s ease; width: 6px; cursor: pointer; }
-  .dot-ind.active { background: #59BFFF; width: 18px; }
-  .loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 8px; }
-  .spinner { width: 20px; height: 20px; border: 2px solid rgba(89,191,255,0.2); border-top-color: #59BFFF; border-radius: 50%; animation: spin .8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { font-size: 10px; color: rgba(89,191,255,0.5); letter-spacing: .06em; }
-  .error-text { font-size: 10px; color: #FF6B6B; text-align: center; padding: 0 12px; }
-</style>
-</head>
-<body>
-<div class="overlay">
-  <div class="rank-section" id="rank-section">
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <span class="loading-text">Chargement...</span>
+  <head>
+    <meta charset="UTF-8" />
+    <title>AphinXSa — Overlay Carrousel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        background: transparent;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        font-family: "Inter", sans-serif;
+      }
+      .overlay {
+        width: 360px;
+        background: #010131;
+        border-radius: 12px;
+        border: 1px solid #59bfff;
+        overflow: hidden;
+        box-shadow:
+          0 4px 32px rgba(89, 191, 255, 0.08),
+          0 0 0 0.5px rgba(89, 191, 255, 0.1);
+      }
+      .rank-section {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 14px;
+        border-bottom: 1px solid rgba(89, 191, 255, 0.15);
+        background: linear-gradient(
+          90deg,
+          rgba(89, 191, 255, 0.05),
+          transparent
+        );
+        min-height: 58px;
+        position: relative;
+        z-index: 2;
+      }
+      .rank-emblem {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(89, 191, 255, 0.08);
+        border: 1.5px solid rgba(89, 191, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .rank-emblem img {
+        width: 36px;
+        height: 36px;
+        object-fit: contain;
+      }
+      .rank-info {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+      .rank-label-small {
+        font-size: 8.5px;
+        color: rgba(89, 191, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-weight: 600;
+      }
+      .rank-value {
+        font-size: 15px;
+        font-weight: 800;
+        color: #59bfff;
+        line-height: 1;
+        letter-spacing: -0.01em;
+      }
+      .rank-lp {
+        font-size: 11px;
+        color: rgba(89, 191, 255, 0.7);
+        font-weight: 500;
+      }
+      .lp-bar-wrap {
+        height: 2px;
+        background: rgba(89, 191, 255, 0.12);
+        border-radius: 1px;
+        overflow: hidden;
+        width: 60px;
+        margin-top: 2px;
+      }
+      .lp-bar-fill {
+        height: 100%;
+        border-radius: 1px;
+        background: linear-gradient(90deg, #59bfff, #a8e063);
+      }
+      .v-sep {
+        width: 1px;
+        height: 30px;
+        background: rgba(89, 191, 255, 0.15);
+        flex-shrink: 0;
+      }
+      .rank-wr-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .wr-val {
+        font-size: 14px;
+        font-weight: 700;
+        color: #a8e063;
+      }
+      .meta-label {
+        font-size: 8.5px;
+        color: rgba(89, 191, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+      }
+      .right-badges {
+        margin-left: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+      }
+      .badge {
+        font-size: 9px;
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+      .badge-streak {
+        background: rgba(89, 191, 255, 0.1);
+        border: 1px solid rgba(89, 191, 255, 0.3);
+        color: rgba(89, 191, 255, 0.85);
+      }
+      .badge-wl {
+        background: rgba(168, 224, 99, 0.08);
+        border: 1px solid rgba(168, 224, 99, 0.25);
+        color: rgba(168, 224, 99, 0.8);
+      }
+      .carousel-wrap {
+        height: 112px;
+        overflow: hidden;
+      }
+      .carousel-track {
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .slide {
+        height: 112px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+      }
+      .slide-name-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .eyebrow {
+        font-size: 8.5px;
+        color: rgba(89, 191, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-weight: 600;
+      }
+      .player-name {
+        font-size: 30px;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .player-meta {
+        font-size: 11px;
+        color: rgba(89, 191, 255, 0.6);
+        font-weight: 500;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1px 1fr 1px 1fr;
+        align-items: center;
+        width: 100%;
+      }
+      .stat-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+      }
+      .stat-num {
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+      .stat-num.win {
+        color: #a8e063;
+      }
+      .stat-num.loss {
+        color: #ff6b6b;
+      }
+      .stat-num.kda {
+        color: #59bfff;
+        font-size: 22px;
+      }
+      .stat-sub {
+        font-size: 8.5px;
+        color: rgba(89, 191, 255, 0.45);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+      }
+      .champs-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        width: 100%;
+        justify-content: center;
+      }
+      .champ-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+      }
+      .champ-icon-wrap {
+        position: relative;
+        width: 44px;
+        height: 44px;
+      }
+      .champ-img {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid transparent;
+        display: block;
+      }
+      .champ-img.win {
+        border-color: rgba(168, 224, 99, 0.6);
+        box-shadow: 0 0 8px rgba(168, 224, 99, 0.2);
+      }
+      .champ-img.loss {
+        border-color: rgba(255, 107, 107, 0.6);
+        filter: brightness(0.85);
+      }
+      .result-dot {
+        position: absolute;
+        bottom: -1px;
+        right: -1px;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        font-size: 7px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px solid #010131;
+      }
+      .result-dot.win {
+        background: #a8e063;
+        color: #010131;
+      }
+      .result-dot.loss {
+        background: #ff6b6b;
+        color: #fff;
+      }
+      .champ-name-label {
+        font-size: 8px;
+        color: rgba(89, 191, 255, 0.7);
+        font-weight: 600;
+        text-align: center;
+        max-width: 52px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .champ-kda-label {
+        font-size: 8px;
+        font-weight: 600;
+        text-align: center;
+      }
+      .champ-kda-label.win {
+        color: rgba(168, 224, 99, 0.75);
+      }
+      .champ-kda-label.loss {
+        color: rgba(255, 107, 107, 0.75);
+      }
+      .season-grid {
+        display: grid;
+        grid-template-columns: 1fr 1px 1fr 1px 1fr;
+        align-items: center;
+        width: 100%;
+      }
+      .season-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+      .s-val {
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        line-height: 1;
+      }
+      .s-val.wr {
+        color: #a8e063;
+      }
+      .s-val.kda {
+        color: #59bfff;
+      }
+      .s-sub {
+        font-size: 8.5px;
+        color: rgba(89, 191, 255, 0.45);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+      }
+      .mp-champ-img {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(89, 191, 255, 0.4);
+        object-fit: cover;
+      }
+      .mp-name {
+        font-size: 9px;
+        color: #fff;
+        font-weight: 600;
+      }
+      .mp-wr {
+        font-size: 8.5px;
+        color: rgba(168, 224, 99, 0.8);
+        font-weight: 600;
+      }
+      .slide-indicators {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+        padding: 5px 0 6px;
+        border-top: 1px solid rgba(89, 191, 255, 0.08);
+      }
+      .dot-ind {
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(89, 191, 255, 0.2);
+        transition: all 0.35s ease;
+        width: 6px;
+        cursor: pointer;
+      }
+      .dot-ind.active {
+        background: #59bfff;
+        width: 18px;
+      }
+      .loading-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        gap: 8px;
+      }
+      .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(89, 191, 255, 0.2);
+        border-top-color: #59bfff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .loading-text {
+        font-size: 10px;
+        color: rgba(89, 191, 255, 0.5);
+        letter-spacing: 0.06em;
+      }
+      .error-text {
+        font-size: 10px;
+        color: #ff6b6b;
+        text-align: center;
+        padding: 0 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="overlay">
+      <div class="rank-section" id="rank-section">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <span class="loading-text">Chargement...</span>
+        </div>
+      </div>
+      <div class="carousel-wrap">
+        <div class="carousel-track" id="carousel-track"></div>
+      </div>
+      <div class="slide-indicators" id="indicators"></div>
     </div>
-  </div>
-  <div class="carousel-wrap">
-    <div class="carousel-track" id="carousel-track"></div>
-  </div>
-  <div class="slide-indicators" id="indicators"></div>
-</div>
 
-<script>
-// ═══════════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════════
-const API_KEY       = "RGAPI-46ae4afb-1e43-404b-8ae0-735476e528d7";
-const GAME_NAME     = "AphinXSa";
-const TAG_LINE      = "Ahjin";
-const PLATFORM      = "euw1";
-const REGION        = "europe";
-const QUEUE_ID      = 420; // SoloQ — 440 pour Flex
-const SESSION_COUNT = 7;
+    <script>
+      // ═══════════════════════════════════════════
+      // CONFIG
+      // ═══════════════════════════════════════════
+      const API_KEY = "RGAPI-46ae4afb-1e43-404b-8ae0-735476e528d7";
+      const GAME_NAME = "AphinXSa";
+      const TAG_LINE = "Ahjin";
+      const PLATFORM = "euw1";
+      const REGION = "europe";
+      const QUEUE_ID = 420; // SoloQ — 440 pour Flex
+      const SESSION_COUNT = 7;
 
-let DD_VERSION = "14.24.1";
-let DD_BASE    = "";
+      let DD_VERSION = "14.24.1";
+      let DD_BASE = "";
 
-// ═══════════════════════════════════════════
-// API
-// ═══════════════════════════════════════════
-async function riotFetch(url) {
-  const sep = url.includes("?") ? "&" : "?";
-  const r = await fetch(`${url}${sep}api_key=${API_KEY}`);
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return r.json();
-}
+      // ═══════════════════════════════════════════
+      // API
+      // ═══════════════════════════════════════════
+      async function riotFetch(url) {
+        const sep = url.includes("?") ? "&" : "?";
+        const r = await fetch(`${url}${sep}api_key=${API_KEY}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }
 
-async function getVersion() {
-  try {
-    const v = await fetch("https://ddragon.leagueoflegends.com/api/versions.json").then(r => r.json());
-    DD_VERSION = v[0];
-  } catch (_) {}
-  DD_BASE = `https://ddragon.leagueoflegends.com/cdn/${DD_VERSION}`;
-}
+      async function getVersion() {
+        try {
+          const v = await fetch(
+            "https://ddragon.leagueoflegends.com/api/versions.json",
+          ).then((r) => r.json());
+          DD_VERSION = v[0];
+        } catch (_) {}
+        DD_BASE = `https://ddragon.leagueoflegends.com/cdn/${DD_VERSION}`;
+      }
 
-function champIcon(name) {
-  return `${DD_BASE}/img/champion/${name.replace(/[^a-zA-Z0-9]/g, "")}.png`;
-}
+      function champIcon(name) {
+        return `${DD_BASE}/img/champion/${name.replace(/[^a-zA-Z0-9]/g, "")}.png`;
+      }
 
-const RANK_EMBLEMS = {
-  IRON:        "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/iron.png",
-  BRONZE:      "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/bronze.png",
-  SILVER:      "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/silver.png",
-  GOLD:        "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/gold.png",
-  PLATINUM:    "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/platinum.png",
-  EMERALD:     "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/emerald.png",
-  DIAMOND:     "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/diamond.png",
-  MASTER:      "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/master.png",
-  GRANDMASTER: "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/grandmaster.png",
-  CHALLENGER:  "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/challenger.png",
-};
+      const RANK_EMBLEMS = {
+        IRON: "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/iron.png",
+        BRONZE:
+          "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/bronze.png",
+        SILVER:
+          "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/silver.png",
+        GOLD: "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/gold.png",
+        PLATINUM:
+          "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/platinum.png",
+        EMERALD:
+          "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/emerald.png",
+        DIAMOND:
+          "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/diamond.png",
+        MASTER:
+          "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/master.png",
+        GRANDMASTER:
+          "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/grandmaster.png",
+        CHALLENGER:
+          "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/challenger.png",
+      };
 
-async function fetchAll() {
-  await getVersion();
+      async function fetchAll() {
+        await getVersion();
 
-  const acc     = await riotFetch(`https://${REGION}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(GAME_NAME)}/${encodeURIComponent(TAG_LINE)}`);
-  const puuid   = acc.puuid;
-  const summoner = await riotFetch(`https://${PLATFORM}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`);
+        const acc = await riotFetch(
+          `https://${REGION}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(GAME_NAME)}/${encodeURIComponent(TAG_LINE)}`,
+        );
+        const puuid = acc.puuid;
+        const summoner = await riotFetch(
+          `https://${PLATFORM}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`,
+        );
 
-  const [entries, matchIds] = await Promise.all([
-    riotFetch(`https://${PLATFORM}.api.riotgames.com/lol/league/v4/entries/by-summoner/${summoner.id}`),
-    riotFetch(`https://${REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=${QUEUE_ID}&count=9`),
-  ]);
+        const [entries, matchIds] = await Promise.all([
+          riotFetch(
+            `https://${PLATFORM}.api.riotgames.com/lol/league/v4/entries/by-summoner/${summoner.id}`,
+          ),
+          riotFetch(
+            `https://${REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=${QUEUE_ID}&count=9`,
+          ),
+        ]);
 
-  const soloq = entries.find(e => e.queueType === "RANKED_SOLO_5x5") || null;
-  const matches = await Promise.all(matchIds.map(id =>
-    riotFetch(`https://${REGION}.api.riotgames.com/lol/match/v5/matches/${id}`)
-  ));
+        const soloq =
+          entries.find((e) => e.queueType === "RANKED_SOLO_5x5") || null;
+        const matches = await Promise.all(
+          matchIds.map((id) =>
+            riotFetch(
+              `https://${REGION}.api.riotgames.com/lol/match/v5/matches/${id}`,
+            ),
+          ),
+        );
 
-  const stats = matches.map(m => {
-    const p = m.info.participants.find(x => x.puuid === puuid);
-    if (!p) return null;
-    return { champion: p.championName, k: p.kills, d: p.deaths, a: p.assists, win: p.win };
-  }).filter(Boolean);
+        const stats = matches
+          .map((m) => {
+            const p = m.info.participants.find((x) => x.puuid === puuid);
+            if (!p) return null;
+            return {
+              champion: p.championName,
+              k: p.kills,
+              d: p.deaths,
+              a: p.assists,
+              win: p.win,
+            };
+          })
+          .filter(Boolean);
 
-  const session = stats.slice(0, SESSION_COUNT);
-  const sWins   = session.filter(s => s.win).length;
-  const sKda    = session.reduce((acc, s) => acc + (s.d === 0 ? s.k + s.a : (s.k + s.a) / s.d), 0) / (session.length || 1);
+        const session = stats.slice(0, SESSION_COUNT);
+        const sWins = session.filter((s) => s.win).length;
+        const sKda =
+          session.reduce(
+            (acc, s) => acc + (s.d === 0 ? s.k + s.a : (s.k + s.a) / s.d),
+            0,
+          ) / (session.length || 1);
 
-  const champMap = {};
-  stats.forEach(s => {
-    if (!champMap[s.champion]) champMap[s.champion] = { games: 0, wins: 0 };
-    champMap[s.champion].games++;
-    if (s.win) champMap[s.champion].wins++;
-  });
-  const top = Object.entries(champMap).sort((a, b) => b[1].games - a[1].games)[0];
-  const mostPlayed = top ? { name: top[0], wr: Math.round(top[1].wins / top[1].games * 100) } : null;
-  const avgKda = stats.reduce((acc, s) => acc + (s.d === 0 ? s.k + s.a : (s.k + s.a) / s.d), 0) / (stats.length || 1);
+        const champMap = {};
+        stats.forEach((s) => {
+          if (!champMap[s.champion])
+            champMap[s.champion] = { games: 0, wins: 0 };
+          champMap[s.champion].games++;
+          if (s.win) champMap[s.champion].wins++;
+        });
+        const top = Object.entries(champMap).sort(
+          (a, b) => b[1].games - a[1].games,
+        )[0];
+        const mostPlayed = top
+          ? { name: top[0], wr: Math.round((top[1].wins / top[1].games) * 100) }
+          : null;
+        const avgKda =
+          stats.reduce(
+            (acc, s) => acc + (s.d === 0 ? s.k + s.a : (s.k + s.a) / s.d),
+            0,
+          ) / (stats.length || 1);
 
-  return {
-    player: { name: GAME_NAME, tag: TAG_LINE },
-    soloq,
-    session: { wins: sWins, losses: session.length - sWins, avgKda: sKda.toFixed(2) },
-    recentChamps: stats.slice(0, 5),
-    season: {
-      wr:   soloq ? Math.round(soloq.wins / (soloq.wins + soloq.losses) * 100) : null,
-      total: soloq ? soloq.wins + soloq.losses : null,
-      avgKda: avgKda.toFixed(2),
-      mostPlayed,
-    },
-  };
-}
+        return {
+          player: { name: GAME_NAME, tag: TAG_LINE },
+          soloq,
+          session: {
+            wins: sWins,
+            losses: session.length - sWins,
+            avgKda: sKda.toFixed(2),
+          },
+          recentChamps: stats.slice(0, 5),
+          season: {
+            wr: soloq
+              ? Math.round((soloq.wins / (soloq.wins + soloq.losses)) * 100)
+              : null,
+            total: soloq ? soloq.wins + soloq.losses : null,
+            avgKda: avgKda.toFixed(2),
+            mostPlayed,
+          },
+        };
+      }
 
-// ═══════════════════════════════════════════
-// RENDER
-// ═══════════════════════════════════════════
-function renderRank(soloq) {
-  const sec = document.getElementById("rank-section");
-  if (!soloq) { sec.innerHTML = `<span style="font-size:10px;color:rgba(89,191,255,0.4)">Non classé</span>`; return; }
-  const tier    = soloq.tier;
-  const rankStr = tier.charAt(0) + tier.slice(1).toLowerCase() + " " + soloq.rank;
-  const wr      = Math.round(soloq.wins / (soloq.wins + soloq.losses) * 100);
-  sec.innerHTML = `
+      // ═══════════════════════════════════════════
+      // RENDER
+      // ═══════════════════════════════════════════
+      function renderRank(soloq) {
+        const sec = document.getElementById("rank-section");
+        if (!soloq) {
+          sec.innerHTML = `<span style="font-size:10px;color:rgba(89,191,255,0.4)">Non classé</span>`;
+          return;
+        }
+        const tier = soloq.tier;
+        const rankStr =
+          tier.charAt(0) + tier.slice(1).toLowerCase() + " " + soloq.rank;
+        const wr = Math.round((soloq.wins / (soloq.wins + soloq.losses)) * 100);
+        sec.innerHTML = `
     <div class="rank-emblem"><img src="${RANK_EMBLEMS[tier] || ""}" alt="${tier}" onerror="this.style.display='none'"></div>
     <div class="rank-info">
       <span class="rank-label-small">Rang actuel</span>
       <span class="rank-value">${rankStr}</span>
       <span class="rank-lp">${soloq.leaguePoints} LP</span>
-      <div class="lp-bar-wrap"><div class="lp-bar-fill" style="width:${Math.min(soloq.leaguePoints,100)}%"></div></div>
+      <div class="lp-bar-wrap"><div class="lp-bar-fill" style="width:${Math.min(soloq.leaguePoints, 100)}%"></div></div>
     </div>
     <div class="v-sep"></div>
     <div class="rank-wr-block">
@@ -208,32 +597,33 @@ function renderRank(soloq) {
       ${soloq.hotStreak ? '<span class="badge badge-streak">🔥 Hot Streak</span>' : ""}
       <span class="badge badge-wl">${soloq.wins}V ${soloq.losses}D</span>
     </div>`;
-}
+      }
 
-function slidePlayerName(d) {
-  return `<div class="slide"><div class="slide-name-content">
+      function slidePlayerName(d) {
+        return `<div class="slide"><div class="slide-name-content">
     <span class="eyebrow">Streamer ADC</span>
     <span class="player-name">${d.player.name}</span>
     <span class="player-meta">#${d.player.tag} · ADC Main · EUW</span>
   </div></div>`;
-}
+      }
 
-function slideSession(d) {
-  const s = d.session;
-  return `<div class="slide"><div class="stats-grid">
+      function slideSession(d) {
+        const s = d.session;
+        return `<div class="slide"><div class="stats-grid">
     <div class="stat-block"><span class="stat-num win">${s.wins}</span><span class="stat-sub">Victoires</span></div>
     <div class="v-sep"></div>
     <div class="stat-block"><span class="stat-num loss">${s.losses}</span><span class="stat-sub">Défaites</span></div>
     <div class="v-sep"></div>
     <div class="stat-block"><span class="stat-num kda">${s.avgKda}</span><span class="stat-sub">KDA moy.</span></div>
   </div></div>`;
-}
+      }
 
-function slideChamps(d) {
-  const cells = d.recentChamps.map(c => {
-    const cls = c.win ? "win" : "loss";
-    const kda = c.d === 0 ? "Perf." : `${c.k}/${c.d}/${c.a}`;
-    return `<div class="champ-cell">
+      function slideChamps(d) {
+        const cells = d.recentChamps
+          .map((c) => {
+            const cls = c.win ? "win" : "loss";
+            const kda = c.d === 0 ? "Perf." : `${c.k}/${c.d}/${c.a}`;
+            return `<div class="champ-cell">
       <div class="champ-icon-wrap">
         <img class="champ-img ${cls}" src="${champIcon(c.champion)}" alt="${c.champion}" onerror="this.style.opacity='.2'">
         <div class="result-dot ${cls}">${c.win ? "W" : "L"}</div>
@@ -241,18 +631,19 @@ function slideChamps(d) {
       <span class="champ-name-label">${c.champion}</span>
       <span class="champ-kda-label ${cls}">${kda}</span>
     </div>`;
-  }).join("");
-  return `<div class="slide"><div class="champs-row">${cells}</div></div>`;
-}
+          })
+          .join("");
+        return `<div class="slide"><div class="champs-row">${cells}</div></div>`;
+      }
 
-function slideSeason(d) {
-  const s  = d.season;
-  const mp = s.mostPlayed;
-  const mpHtml = mp
-    ? `<img class="mp-champ-img" src="${champIcon(mp.name)}" alt="${mp.name}" onerror="this.style.opacity='.2'">
+      function slideSeason(d) {
+        const s = d.season;
+        const mp = s.mostPlayed;
+        const mpHtml = mp
+          ? `<img class="mp-champ-img" src="${champIcon(mp.name)}" alt="${mp.name}" onerror="this.style.opacity='.2'">
        <span class="mp-name">${mp.name}</span><span class="mp-wr">${mp.wr}% WR</span>`
-    : `<div style="width:30px;height:30px;border-radius:50%;background:rgba(89,191,255,0.1)"></div>`;
-  return `<div class="slide"><div class="season-grid">
+          : `<div style="width:30px;height:30px;border-radius:50%;background:rgba(89,191,255,0.1)"></div>`;
+        return `<div class="slide"><div class="season-grid">
     <div class="season-block">
       <span class="s-val wr">${s.wr !== null ? s.wr + "%" : "—"}</span>
       <span class="s-sub">Winrate</span>
@@ -263,55 +654,69 @@ function slideSeason(d) {
     <div class="v-sep"></div>
     <div class="season-block" style="gap:3px">${mpHtml}<span class="s-sub" style="margin-top:1px">Most Played</span></div>
   </div></div>`;
-}
+      }
 
-// ═══════════════════════════════════════════
-// CAROUSEL
-// ═══════════════════════════════════════════
-let cur = 0, timer = null;
+      // ═══════════════════════════════════════════
+      // CAROUSEL
+      // ═══════════════════════════════════════════
+      let cur = 0,
+        timer = null;
 
-function goTo(idx) {
-  cur = (idx + 4) % 4;
-  document.getElementById("carousel-track").style.transform = `translateY(-${cur * 112}px)`;
-  document.querySelectorAll(".dot-ind").forEach((d, i) => d.className = "dot-ind" + (i === cur ? " active" : ""));
-}
+      function goTo(idx) {
+        cur = (idx + 4) % 4;
+        document.getElementById("carousel-track").style.transform =
+          `translateY(-${cur * 112}px)`;
+        document
+          .querySelectorAll(".dot-ind")
+          .forEach(
+            (d, i) => (d.className = "dot-ind" + (i === cur ? " active" : "")),
+          );
+      }
 
-function startCarousel() {
-  if (timer) clearInterval(timer);
-  timer = setInterval(() => goTo(cur + 1), 4000);
-}
+      function startCarousel() {
+        if (timer) clearInterval(timer);
+        timer = setInterval(() => goTo(cur + 1), 4000);
+      }
 
-function buildIndicators() {
-  const c = document.getElementById("indicators");
-  c.innerHTML = "";
-  for (let i = 0; i < 4; i++) {
-    const d = document.createElement("div");
-    d.className = "dot-ind" + (i === 0 ? " active" : "");
-    d.onclick = () => { goTo(i); clearInterval(timer); startCarousel(); };
-    c.appendChild(d);
-  }
-}
+      function buildIndicators() {
+        const c = document.getElementById("indicators");
+        c.innerHTML = "";
+        for (let i = 0; i < 4; i++) {
+          const d = document.createElement("div");
+          d.className = "dot-ind" + (i === 0 ? " active" : "");
+          d.onclick = () => {
+            goTo(i);
+            clearInterval(timer);
+            startCarousel();
+          };
+          c.appendChild(d);
+        }
+      }
 
-// ═══════════════════════════════════════════
-// INIT — appelé une seule fois au chargement
-// OBS recharge la page à chaque changement de scène
-// ═══════════════════════════════════════════
-async function init() {
-  try {
-    const data = await fetchAll();
-    renderRank(data.soloq);
-    document.getElementById("carousel-track").innerHTML =
-      slidePlayerName(data) + slideSession(data) + slideChamps(data) + slideSeason(data);
-    buildIndicators();
-    goTo(0);
-    startCarousel();
-  } catch (err) {
-    document.getElementById("rank-section").innerHTML = `<span class="error-text">Erreur : ${err.message}</span>`;
-    console.error(err);
-  }
-}
+      // ═══════════════════════════════════════════
+      // INIT — appelé une seule fois au chargement
+      // OBS recharge la page à chaque changement de scène
+      // ═══════════════════════════════════════════
+      async function init() {
+        try {
+          const data = await fetchAll();
+          renderRank(data.soloq);
+          document.getElementById("carousel-track").innerHTML =
+            slidePlayerName(data) +
+            slideSession(data) +
+            slideChamps(data) +
+            slideSeason(data);
+          buildIndicators();
+          goTo(0);
+          startCarousel();
+        } catch (err) {
+          document.getElementById("rank-section").innerHTML =
+            `<span class="error-text">Erreur : ${err.message}</span>`;
+          console.error(err);
+        }
+      }
 
-init();
-</script>
-</body>
+      init();
+    </script>
+  </body>
 </html>
