@@ -111,15 +111,15 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 10px;
+        gap: 20px;
         width: 100%;
       }
       .rank-wr-block {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        align-items: center;
-        gap: 2px;
+        align-items: space-between;
+        gap: 5px;
       }
       .wr-val {
         font-size: 14px;
@@ -179,12 +179,7 @@
         justify-content: center;
         align-items: center;
         gap: 4px;
-      }
-      .player-name-wrap {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 6px;
+        width: 100%;
       }
       .player-name {
         font-size: 30px;
@@ -192,6 +187,12 @@
         color: #fff;
         letter-spacing: -0.02em;
         line-height: 1;
+      }
+      .player-name-wrap {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 5px;
       }
       .player-tag {
         font-size: 30px;
@@ -595,13 +596,16 @@
         const wr = Math.round((soloq.wins / (soloq.wins + soloq.losses)) * 100);
         sec.innerHTML = `
         <div class="rank-presentation">
-        <div class="rank-emblem"><img src="${RANK_EMBLEMS[tier] || ""}" alt="${tier}" onerror="this.style.display='none'"></div>
-    <div class="rank-info">
-      <span class="rank-label-small">Rang actuel</span>
-      <span class="rank-value">${rankStr}</span>
-      <span class="rank-lp">${soloq.leaguePoints} LP</span>
-      <div class="lp-bar-wrap"><div class="lp-bar-fill" style="width:${Math.min(soloq.leaguePoints, 100)}%"></div></div>
-    </div>
+          <div class="rank-emblem">
+            <img src="${RANK_EMBLEMS[tier] || ""}" alt="${tier}" onerror="this.style.display='none'">
+          </div>
+          <div class="rank-info">
+            <span class="rank-label-small">Rang actuel</span>
+            <span class="rank-value">${rankStr}</span>
+            <span class="rank-lp">${soloq.leaguePoints} LP</span>
+            <div class="lp-bar-wrap"><div class="lp-bar-fill" style="width:${Math.min(soloq.leaguePoints, 100)}%"></div>
+          </div>
+        </div>
     <div class="v-sep"></div>
     <div class="rank-wr-block">
       <span class="meta-label">Winrate</span>
@@ -614,14 +618,17 @@
       }
 
       function slidePlayerName(d) {
-        return `<div class="slide"><div class="slide-name-content">
-    <div class="player-name-wrap">
-      <span class="player-name">${d.player.name}</span>
-      <span class="player-tag">#${d.player.tag}</span>
-    </div>
-    <span class="player-meta">#${d.player.tag} ADC Main · EUW</span>
-  </div></div>`;
-      }
+        return `
+        <div class="slide">
+          <div class="slide-name-content">
+            <div class="player-name-wrap">
+              <span class="player-name">${d.player.name}</span>
+              <span class="player-tag">#${d.player.tag}</span>
+              <span class="player-meta">ADC Main · EUW</span>
+            </div>
+          </div>
+        </div>
+      `;}
 
       function slideSession(d) {
         const s = d.session;
