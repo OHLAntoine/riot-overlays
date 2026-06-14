@@ -482,70 +482,73 @@
         const puuid = acc.puuid;
         const startTime = todayStartEpochSeconds();
 
-        const [entries, matchIds] = await Promise.all([
+        // 3 appels en parallèle : rank, parties du jour, 20 dernières toutes dates
+        const [entries, todayIds, recentIds] = await Promise.all([
           riotFetch(
             `https://${PLATFORM}.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}`,
           ),
           riotFetch(
-            `https://${REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=${QUEUE_ID}&start=0&count=20&startTime=${startTime}`,
+            `https://${REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=${QUEUE_ID}&count=20&startTime=${startTime}`,
+          ),
+          riotFetch(
+            `https://${REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=${QUEUE_ID}&count=20`,
           ),
         ]);
 
-        const soloq =
-          entries.find((e) => e.queueType === "RANKED_SOLO_5x5") || null;
-        const matches = await Promise.all(
-          matchIds.map((id) =>
-            riotFetch(
-              `https://${REGION}.api.riotgames.com/lol/match/v5/matches/${id}`,
-            ),
+        const soloq = entries.find((e) => e.queueType === "RANKED_SOLO_5x5") || null;
+
+        // IDs uniques à fetch (union des deux listes sans doublon)
+        const allIds = [...new Set([...todayIds, ...recentIds])];
+        const allMatches = await Promise.all(
+          allIds.map((id) =>
+            riotFetch(`https://${REGION}.api.riotgames.com/lol/match/v5/matches/${id}`),
           ),
         );
 
-        // Double-vérification côté client : gameStartTimestamp est en ms
+        // Map id → stats joueur
+        const matchMap = {};
+        allMatches.forEach((m) => {
+          const p = m.info.participants.find((x) => x.puuid === puuid);
+          if (!p) return;
+          matchMap[m.metadata.matchId] = {
+            champion: p.championName,
+            k: p.kills,
+            d: p.deaths,
+            a: p.assists,
+            win: p.win,
+            ts: m.info.gameStartTimestamp,
+          };
+        });
+
+        // ── Session du jour (slide 2) ─────────────────
         const todayMs = startTime * 1000;
-        const stats = matches
-          .filter((m) => m.info.gameStartTimestamp >= todayMs)
-          .map((m) => {
-            const p = m.info.participants.find((x) => x.puuid === puuid);
-            if (!p) return null;
-            return {
-              champion: p.championName,
-              k: p.kills,
-              d: p.deaths,
-              a: p.assists,
-              win: p.win,
-            };
-          })
+        const session = todayIds
+          .map((id) => matchMap[id])
+          .filter((s) => s && s.ts >= todayMs);
+        const sWins = session.filter((s) => s.win).length;
+        const sKda = session.length === 0 ? null :
+          session.reduce((acc, s) => acc + (s.d === 0 ? s.k + s.a : (s.k + s.a) / s.d), 0) / session.length;
+
+        // ── 5 dernières toutes dates (slide 3) ───────
+        const recentChamps = recentIds
+          .slice(0, 5)
+          .map((id) => matchMap[id])
           .filter(Boolean);
 
-        // Session = toutes les parties du jour
-        const session = stats;
-        const sWins = session.filter((s) => s.win).length;
-        const sKda =
-          session.length === 0 ? 0 :
-          session.reduce(
-            (acc, s) => acc + (s.d === 0 ? s.k + s.a : (s.k + s.a) / s.d),
-            0,
-          ) / session.length;
-
+        // ── Récap sur les 20 dernières (slide 4) ─────
+        const allRecent = recentIds.map((id) => matchMap[id]).filter(Boolean);
         const champMap = {};
-        stats.forEach((s) => {
-          if (!champMap[s.champion])
-            champMap[s.champion] = { games: 0, wins: 0 };
+        allRecent.forEach((s) => {
+          if (!champMap[s.champion]) champMap[s.champion] = { games: 0, wins: 0 };
           champMap[s.champion].games++;
           if (s.win) champMap[s.champion].wins++;
         });
-        const top = Object.entries(champMap).sort(
-          (a, b) => b[1].games - a[1].games,
-        )[0];
+        const top = Object.entries(champMap).sort((a, b) => b[1].games - a[1].games)[0];
         const mostPlayed = top
           ? { name: top[0], wr: Math.round((top[1].wins / top[1].games) * 100) }
           : null;
-        const avgKda =
-          stats.reduce(
-            (acc, s) => acc + (s.d === 0 ? s.k + s.a : (s.k + s.a) / s.d),
-            0,
-          ) / (stats.length || 1);
+        const avgKda = allRecent.length === 0 ? 0 :
+          allRecent.reduce((acc, s) => acc + (s.d === 0 ? s.k + s.a : (s.k + s.a) / s.d), 0) / allRecent.length;
 
         return {
           player: { name: GAME_NAME, tag: TAG_LINE },
@@ -553,14 +556,12 @@
           session: {
             wins: sWins,
             losses: session.length - sWins,
-            avgKda: session.length === 0 ? "—" : sKda.toFixed(2),
+            avgKda: sKda === null ? "—" : sKda.toFixed(2),
             count: session.length,
           },
-          recentChamps: stats.slice(0, 5),
+          recentChamps,
           season: {
-            wr: soloq
-              ? Math.round((soloq.wins / (soloq.wins + soloq.losses)) * 100)
-              : null,
+            wr: soloq ? Math.round((soloq.wins / (soloq.wins + soloq.losses)) * 100) : null,
             total: soloq ? soloq.wins + soloq.losses : null,
             avgKda: avgKda.toFixed(2),
             mostPlayed,
