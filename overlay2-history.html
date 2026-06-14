@@ -22,8 +22,14 @@
         overflow: hidden;
         font-family: "Inter", sans-serif;
       }
+      .widget {
+        position: absolute;
+        bottom: 0;
+        left: 200px;
+        transform: translate(-50%, -50%);
+      }
       .overlay {
-        width: 360px;
+        width: 380px;
         background: #010131;
         border-radius: 12px;
         border: 2px solid #59bfff;
@@ -231,22 +237,24 @@
     </style>
   </head>
   <body>
-    <div class="overlay" id="overlay">
-      <div class="loading-overlay" id="loader">
-        <div class="spinner"></div>
-        <span class="loading-text">Chargement de l'historique...</span>
-      </div>
-      <div class="header">
-        <div>
-          <span class="header-rank" id="header-rank">—</span
-          ><span class="header-lp" id="header-lp"></span>
+    <div class="widget" id="widget">
+      <div class="overlay" id="overlay">
+        <div class="loading-overlay" id="loader">
+          <div class="spinner"></div>
+          <span class="loading-text">Chargement de l'historique...</span>
         </div>
-        <div class="header-summary" id="summary"></div>
-      </div>
-      <div class="history-grid" id="history-grid"></div>
-      <div class="footer">
-        <span class="footer-kda" id="footer-kda"></span>
-        <span class="footer-time" id="footer-time"></span>
+        <div class="header">
+          <div>
+            <span class="header-rank" id="header-rank">—</span
+            ><span class="header-lp" id="header-lp"></span>
+          </div>
+          <div class="header-summary" id="summary"></div>
+        </div>
+        <div class="history-grid" id="history-grid"></div>
+        <div class="footer">
+          <span class="footer-kda" id="footer-kda"></span>
+          <span class="footer-time" id="footer-time"></span>
+        </div>
       </div>
     </div>
 
