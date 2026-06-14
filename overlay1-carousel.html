@@ -417,7 +417,13 @@
       const PLATFORM = "euw1";
       const REGION = "europe";
       const QUEUE_ID = 420; // SoloQ — 440 pour Flex
-      const SESSION_COUNT = 7;
+
+      // Minuit heure locale en secondes (epoch) — reset naturel chaque jour
+      function todayStartEpochSeconds() {
+        const now = new Date();
+        const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+        return Math.floor(midnight.getTime() / 1000);
+      }
 
       let DD_VERSION = "14.24.1";
       let DD_BASE = "";
@@ -474,13 +480,14 @@
           `https://${REGION}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(GAME_NAME)}/${encodeURIComponent(TAG_LINE)}`,
         );
         const puuid = acc.puuid;
+        const startTime = todayStartEpochSeconds();
 
         const [entries, matchIds] = await Promise.all([
           riotFetch(
             `https://${PLATFORM}.api.riotgames.com/lol/league/v4/entries/by-puuid/${puuid}`,
           ),
           riotFetch(
-            `https://${REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=${QUEUE_ID}&count=9`,
+            `https://${REGION}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=${QUEUE_ID}&start=0&count=20&startTime=${startTime}`,
           ),
         ]);
 
@@ -494,7 +501,10 @@
           ),
         );
 
+        // Double-vérification côté client : gameStartTimestamp est en ms
+        const todayMs = startTime * 1000;
         const stats = matches
+          .filter((m) => m.info.gameStartTimestamp >= todayMs)
           .map((m) => {
             const p = m.info.participants.find((x) => x.puuid === puuid);
             if (!p) return null;
@@ -508,13 +518,15 @@
           })
           .filter(Boolean);
 
-        const session = stats.slice(0, SESSION_COUNT);
+        // Session = toutes les parties du jour
+        const session = stats;
         const sWins = session.filter((s) => s.win).length;
         const sKda =
+          session.length === 0 ? 0 :
           session.reduce(
             (acc, s) => acc + (s.d === 0 ? s.k + s.a : (s.k + s.a) / s.d),
             0,
-          ) / (session.length || 1);
+          ) / session.length;
 
         const champMap = {};
         stats.forEach((s) => {
@@ -541,7 +553,8 @@
           session: {
             wins: sWins,
             losses: session.length - sWins,
-            avgKda: sKda.toFixed(2),
+            avgKda: session.length === 0 ? "—" : sKda.toFixed(2),
+            count: session.length,
           },
           recentChamps: stats.slice(0, 5),
           season: {
@@ -606,6 +619,9 @@
 
       function slideSession(d) {
         const s = d.session;
+        const label = s.count === 0
+          ? "Aucune partie aujourd'hui"
+          : `${s.count} partie${s.count > 1 ? "s" : ""} aujourd'hui`;
         return `<div class="slide"><div class="stats-grid">
     <div class="stat-block"><span class="stat-num win">${s.wins}</span><span class="stat-sub">Victoires</span></div>
     <div class="v-sep"></div>
